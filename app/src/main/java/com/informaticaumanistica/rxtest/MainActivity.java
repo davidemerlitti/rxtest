@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
         long duration = System.currentTimeMillis() - startTime;
         String msg = "Test completed in " + duration + "ms";
         Log.d("TEST" + id, msg + " thread " + threadId);
-        //Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
 
     private static Observable<Object> sleep(int id, final long duration) {
