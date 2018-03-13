@@ -3,21 +3,31 @@ RxJava Android Test
 
 Questa app Android serve a fare qualche esperimento con RxJava e il multithreading.
 
-## Il metodo perditempo
+## Il metodo perditempo Observable
 
 ```java
-    private static Observable<Object> sleep(int id, final long duration) {
-        return Observable.fromCallable(new Callable<Object>() {
-            @Override
-            public Object call() throws Exception {
-                long threadId = Thread.currentThread().getId();
-                Log.d("TEST" + id, "Thread id " + threadId + " sleeping " + duration + "ms");
-                Thread.sleep(duration);
-                return duration;
-            }
-        });
+    private static Observable<Object> observableSleep(int id, final long duration) {
+        return Observable.fromCallable(() -> sleep(id, duration));
     }
 ```
+
+## La variante Single
+
+```java
+    private static Single<Object> singleSleep(int id, final long duration) {
+        return Single.fromCallable(() -> sleep(id, duration));
+    }
+```
+
+## La variante Completable
+
+```java
+    private static Completable completableSleep(int id, final long duration) {
+        return Completable.fromCallable(() -> sleep(id, duration));
+    }
+```
+
+
 
 ## Test 1 (multithread)
 
@@ -29,12 +39,10 @@ Vengono creati tre thread distinti.
 ```java
     public void doTest1() {
         Observable.zip(
-                sleep(1,LONG_SLEEPING).subscribeOn(Schedulers.newThread()),
-                sleep(2,MEDIUM_SLEEPING).subscribeOn(Schedulers.newThread()),
-                sleep(3,SHORT_SLEEPING).subscribeOn(Schedulers.newThread()),
-                (o1, o2, o3) -> {
-                    return (long)o1 + (long)o2 + (long)o3;
-                })
+                observableSleep(1,LONG_SLEEPING).subscribeOn(Schedulers.newThread()),
+                observableSleep(2,MEDIUM_SLEEPING).subscribeOn(Schedulers.newThread()),
+                observableSleep(3,SHORT_SLEEPING).subscribeOn(Schedulers.newThread()),
+                (o1, o2, o3) -> ((long)o1 + (long)o2 + (long)o3))
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe(disposable -> onSubscribe(1))
                 .doOnTerminate(() -> onTerminate(1))
@@ -62,12 +70,10 @@ Viene eseguito tutto in modo consecutivo sul thread principale di chiamata.
 ```java
     public void doTest2() {
         Observable.zip(
-                sleep(1,LONG_SLEEPING),
-                sleep(2,MEDIUM_SLEEPING),
-                sleep(3,SHORT_SLEEPING),
-                (o1, o2, o3) -> {
-                    return (long)o1 + (long)o2 + (long)o3;
-                })
+                observableSleep(1,LONG_SLEEPING),
+                observableSleep(2,MEDIUM_SLEEPING),
+                observableSleep(3,SHORT_SLEEPING),
+                (o1, o2, o3) -> ((long)o1 + (long)o2 + (long)o3))
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe(disposable -> onSubscribe(2))
                 .doOnTerminate(() -> onTerminate(2))
@@ -96,12 +102,10 @@ Viene eseguito tutto in modo consecutivo su un nuovo thread diverso dal thread p
 ```java
     public void doTest3() {
         Observable.zip(
-                sleep(1,LONG_SLEEPING),
-                sleep(2,MEDIUM_SLEEPING),
-                sleep(3,SHORT_SLEEPING),
-                (o1, o2, o3) -> {
-                    return (long)o1 + (long)o2 + (long)o3;
-                })
+                observableSleep(1,LONG_SLEEPING),
+                observableSleep(2,MEDIUM_SLEEPING),
+                observableSleep(3,SHORT_SLEEPING),
+                (o1, o2, o3) -> ((long)o1 + (long)o2 + (long)o3))
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe(disposable -> onSubscribe(3))
                 .doOnTerminate(() -> onTerminate(3))
@@ -130,11 +134,9 @@ Viene creato un thread per ogni sleep() e un thread nuovo anche per la chiamata 
 ```java
     public void doTest4() {
         Observable.just(
-                sleep(1,LONG_SLEEPING),
-                sleep(2, MEDIUM_SLEEPING),
-                sleep(3,SHORT_SLEEPING)).flatMap(objectObservable -> {
-                    return objectObservable.subscribeOn(Schedulers.io());
-                })
+                observableSleep(1,LONG_SLEEPING),
+                observableSleep(2, MEDIUM_SLEEPING),
+                observableSleep(3,SHORT_SLEEPING)).flatMap(objectObservable -> objectObservable.subscribeOn(Schedulers.io()))
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe(disposable -> onSubscribe(4))
                 .doOnTerminate(() -> onTerminate(4))
@@ -163,9 +165,9 @@ Viene creato un thread per ogni sleep() e un thread nuovo anche per la chiamata 
 ```java
     public void doTest5() {
         Observable.merge(
-                sleep(1, LONG_SLEEPING).subscribeOn(Schedulers.newThread()),
-                sleep(2, MEDIUM_SLEEPING).subscribeOn(Schedulers.newThread()),
-                sleep(3, SHORT_SLEEPING).subscribeOn(Schedulers.newThread()))
+                observableSleep(1, LONG_SLEEPING).subscribeOn(Schedulers.newThread()),
+                observableSleep(2, MEDIUM_SLEEPING).subscribeOn(Schedulers.newThread()),
+                observableSleep(3, SHORT_SLEEPING).subscribeOn(Schedulers.newThread()))
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe(disposable -> onSubscribe(5))
                 .doOnTerminate(() -> onTerminate(5))
