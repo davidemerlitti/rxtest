@@ -31,9 +31,9 @@ public class MainActivity extends AppCompatActivity {
     @OnClick(R.id.btnTest1)
     public void doTest1() {
         Observable.zip(
-                sleep(1,LONG_SLEEPING).subscribeOn(Schedulers.newThread()),
-                sleep(2,MEDIUM_SLEEPING).subscribeOn(Schedulers.newThread()),
-                sleep(3,SHORT_SLEEPING).subscribeOn(Schedulers.newThread()),
+                observableSleep(1,LONG_SLEEPING).subscribeOn(Schedulers.newThread()),
+                observableSleep(2,MEDIUM_SLEEPING).subscribeOn(Schedulers.newThread()),
+                observableSleep(3,SHORT_SLEEPING).subscribeOn(Schedulers.newThread()),
                 (o1, o2, o3) -> ((long)o1 + (long)o2 + (long)o3))
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe(disposable -> onSubscribe(1))
@@ -44,9 +44,9 @@ public class MainActivity extends AppCompatActivity {
     @OnClick(R.id.btnTest2)
     public void doTest2() {
         Observable.zip(
-                sleep(1,LONG_SLEEPING),
-                sleep(2,MEDIUM_SLEEPING),
-                sleep(3,SHORT_SLEEPING),
+                observableSleep(1,LONG_SLEEPING),
+                observableSleep(2,MEDIUM_SLEEPING),
+                observableSleep(3,SHORT_SLEEPING),
                 (o1, o2, o3) -> ((long)o1 + (long)o2 + (long)o3))
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe(disposable -> onSubscribe(2))
@@ -57,9 +57,9 @@ public class MainActivity extends AppCompatActivity {
     @OnClick(R.id.btnTest3)
     public void doTest3() {
         Observable.zip(
-                sleep(1,LONG_SLEEPING),
-                sleep(2,MEDIUM_SLEEPING),
-                sleep(3,SHORT_SLEEPING),
+                observableSleep(1,LONG_SLEEPING),
+                observableSleep(2,MEDIUM_SLEEPING),
+                observableSleep(3,SHORT_SLEEPING),
                 (o1, o2, o3) -> ((long)o1 + (long)o2 + (long)o3))
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe(disposable -> onSubscribe(3))
@@ -71,9 +71,9 @@ public class MainActivity extends AppCompatActivity {
     @OnClick(R.id.btnTest4)
     public void doTest4() {
         Observable.just(
-                sleep(1,LONG_SLEEPING),
-                sleep(2, MEDIUM_SLEEPING),
-                sleep(3,SHORT_SLEEPING)).flatMap(objectObservable -> objectObservable.subscribeOn(Schedulers.io()))
+                observableSleep(1,LONG_SLEEPING),
+                observableSleep(2, MEDIUM_SLEEPING),
+                observableSleep(3,SHORT_SLEEPING)).flatMap(objectObservable -> objectObservable.subscribeOn(Schedulers.io()))
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe(disposable -> onSubscribe(4))
                 .doOnTerminate(() -> onTerminate(4))
@@ -84,9 +84,9 @@ public class MainActivity extends AppCompatActivity {
     @OnClick(R.id.btnTest5)
     public void doTest5() {
         Observable.merge(
-                sleep(1, LONG_SLEEPING).subscribeOn(Schedulers.newThread()),
-                sleep(2, MEDIUM_SLEEPING).subscribeOn(Schedulers.newThread()),
-                sleep(3, SHORT_SLEEPING).subscribeOn(Schedulers.newThread()))
+                observableSleep(1, LONG_SLEEPING).subscribeOn(Schedulers.newThread()),
+                observableSleep(2, MEDIUM_SLEEPING).subscribeOn(Schedulers.newThread()),
+                observableSleep(3, SHORT_SLEEPING).subscribeOn(Schedulers.newThread()))
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe(disposable -> onSubscribe(5))
                 .doOnTerminate(() -> onTerminate(5))
@@ -129,52 +129,39 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
 
-    private static Observable<Object> sleep(int id, final long duration) {
-        return Observable.fromCallable(() -> {
-            long threadId = Thread.currentThread().getId();
-            Log.d("TEST" + id, "Thread id " + threadId + " sleeping " + duration + "ms");
-            Thread.sleep(duration);
-            return duration;
-        });
+    private static long sleep(int id, long duration) throws InterruptedException {
+        long threadId = Thread.currentThread().getId();
+        Log.d("TEST" + id, "Thread id " + threadId + " sleeping " + duration + "ms");
+        Thread.sleep(duration);
+        return duration;
+    }
+
+    private static long randomSleep(int id, long maxDuration) throws InterruptedException {
+        long threadId = Thread.currentThread().getId();
+        Random random = new Random();
+        long duration = random.nextInt((int)maxDuration);
+        Log.d("TEST" + id, "Thread id " + threadId + " sleeping " + duration + "ms");
+        Thread.sleep(duration);
+        return duration;
+    }
+
+    private static Observable<Object> observableSleep(int id, final long duration) {
+        return Observable.fromCallable(() -> sleep(id, duration));
     }
 
     private static Single<Object> singleSleep(int id, final long duration) {
-        return Single.fromCallable(() -> {
-            long threadId = Thread.currentThread().getId();
-            Log.d("TEST" + id, "Thread id " + threadId + " sleeping " + duration + "ms");
-            Thread.sleep(duration);
-            return duration;
-        });
+        return Single.fromCallable(() -> sleep(id, duration));
     }
 
     private static Completable completableSleep(int id, final long duration) {
-        return Completable.fromCallable(() -> {
-            long threadId = Thread.currentThread().getId();
-            Log.d("TEST" + id, "Thread id " + threadId + " sleeping " + duration + "ms");
-            Thread.sleep(duration);
-            return duration;
-        });
+        return Completable.fromCallable(() -> sleep(id, duration));
     }
 
     private static Single<Object> singleRandomSleep(int id, final long maxDuration) {
-        return Single.fromCallable(() -> {
-            long threadId = Thread.currentThread().getId();
-            Random random = new Random();
-            long duration = random.nextInt((int)maxDuration);
-            Log.d("TEST" + id, "Thread id " + threadId + " sleeping " + duration + "ms");
-            Thread.sleep(duration);
-            return duration;
-        });
+        return Single.fromCallable(() -> randomSleep(id, maxDuration));
     }
 
     private static Completable completableRandomSleep(int id, final long maxDuration) {
-        return Completable.fromCallable(() -> {
-            long threadId = Thread.currentThread().getId();
-            Random random = new Random();
-            long duration = random.nextInt((int)maxDuration);
-            Log.d("TEST" + id, "Thread id " + threadId + " sleeping " + duration + "ms");
-            Thread.sleep(duration);
-            return duration;
-        });
+        return Completable.fromCallable(() -> randomSleep(id, maxDuration));
     }
 }
