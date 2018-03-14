@@ -1,7 +1,7 @@
 # rxtest
 RxJava Android Test
 
-Questa app Android serve a fare qualche esperimento con RxJava e il multithreading.
+Questa app Android serve a fare qualche esperimento con [RxJava](https://github.com/ReactiveX/RxJava) e il multithreading.
 
 ## Il metodo perditempo Observable
 
@@ -31,8 +31,8 @@ Questa app Android serve a fare qualche esperimento con RxJava e il multithreadi
 
 ## Test 1 (multithread)
 
-Operatore `Observable.zip()`, nessuna `subscribeOn()` principale, ogni `sleep()` sottoscritta su un nuovo thread.
-Vengono creati tre thread distinti.
+Operatore `Observable.zip()`, nessuna `subscribeOn()` principale, ogni `observableSleep()` sottoscritta su un nuovo thread.
+Vengono creati tre thread distinti, uno per ogni argomento dello `Observable.zip()`.
 
 ### Codice
 
@@ -62,8 +62,8 @@ D/TEST1: Test completed in 10008ms thread 1
 
 ## Test 2 (non multithread)
 
-Operatore `Observable.zip()`, nessuna `subscribeOn()` principale, nessuna `subscribeOn()` sui singoli `sleep()`.
-Viene eseguito tutto in modo consecutivo sul thread principale di chiamata.
+Operatore `Observable.zip()`, nessuna `subscribeOn()` principale, nessuna `subscribeOn()` sui singoli `observableSleep()`.
+Viene eseguito tutto in modo consecutivo sul thread principale di chiamata (thread 1).
 
 ### Codice
 
@@ -94,7 +94,7 @@ D/TEST2: Test completed in 16041ms thread 1
 
 ## Test 3 (non multithread)
 
-Operatore `Observable.zip()`, `subscribeOn(Schedulers.io())` principale, nessuna `subscribeOn()` sui singoli `sleep()`.
+Operatore `Observable.zip()`, `subscribeOn(Schedulers.io())` principale, nessuna `subscribeOn()` sui singoli `observableSleep()`.
 Viene eseguito tutto in modo consecutivo su un nuovo thread diverso dal thread principale di chiamata.
 
 ### Codice 
@@ -126,8 +126,8 @@ D/TEST3: Test completed in 16010ms thread 1
 
 ## Test 4 (multithread)
 
-Operatore `Observable.just()` con `flatMap()` che esegue una `subscribeOn()` sui singoli observable, `subscribeOn(Schedulers.io())` principale, nessuna `subscribeOn()` sui singoli `sleep()`.
-Viene creato un thread per ogni sleep() e un thread nuovo anche per la chiamata principale.
+Operatore `Observable.just()` con `flatMap()` che esegue una `subscribeOn()` sui singoli observable, `subscribeOn(Schedulers.io())` principale, nessuna `subscribeOn()` sui singoli `observableSleep()`.
+Viene creato un thread per ogni `observableSleep()` e un thread nuovo anche per la chiamata principale.
 
 ### Codice
 
@@ -157,8 +157,8 @@ D/TEST4: Test completed in 10017ms thread 1
 
 ## Test 5  (multithread)
 
-Operatore `Observable.merge()`, `subscribeOn(Schedulers.io())` principale, `subscribeOn()` sui singoli `sleep()`.
-Viene creato un thread per ogni sleep() e un thread nuovo anche per la chiamata principale.
+Operatore `Observable.merge()`, `subscribeOn(Schedulers.io())` principale, `subscribeOn()` sui singoli `observableSleep()`.
+Viene creato un thread per ogni `observableSleep()` e un thread nuovo anche per la chiamata principale.
 
 ### Codice
 
